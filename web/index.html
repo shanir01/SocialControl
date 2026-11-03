@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07080c">
+<title>SocialControl AI — Social Automation</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="orb" aria-hidden="true"></div>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><span class="logo">S</span><div><b>SocialControl</b><small>AI · Social Automation</small></div></div>
+    <nav id="nav">
+      <a href="#dashboard" data-tab="dashboard"><i>◆</i><span>Dashboard</span></a>
+      <a href="#trends" data-tab="trends"><i>↗</i><span>Trends</span></a>
+      <a href="#scan" data-tab="scan"><i>◎</i><span>Channel Scan</span></a>
+      <a href="#create" data-tab="create"><i>✦</i><span>Create Video</span></a>
+      <a href="#control" data-tab="control"><i>⌘</i><span>Full Control</span></a>
+      <a href="#settings" data-tab="settings"><i>⚙</i><span>Settings</span></a>
+    </nav>
+    <div class="side-foot" id="sideFoot"></div>
+  </aside>
+
+  <main id="main">
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="view">
+      <header class="top"><div><h1>Namaste, NISHU 👋</h1><p class="sub">Aaj ka viral plan ready hai — ek tap me video banao.</p></div>
+</header>
+      <div class="stats" id="stats"></div>
+      <div class="grid2">
+        <div class="card"><div class="card-h"><h3>Recent videos</h3><button class="btn ghost sm" id="refreshViews">↻ Views refresh</button></div><div id="recent"></div></div>
+        <div class="card"><div class="card-h"><h3>Auto-run</h3></div><div id="autorun"></div>
+          <div class="card-h mt"><h3>Setup</h3></div><div id="setup"></div></div>
+      </div>
+    </section>
+
+    <!-- TRENDS -->
+    <section id="trends" class="view">
+      <header class="top"><div><h1>Trends</h1><p class="sub">YouTube + Google Trends + Instagram — abhi kya viral hai.</p></div></header>
+      <div class="bar"><input id="niche" placeholder="Niche (e.g. AI tools, tech tips)"><button class="btn primary" id="findTrends">Find Topics</button></div>
+      <div id="hotkw" class="chips"></div>
+      <div id="trendList" class="list"></div>
+    </section>
+
+    <!-- SCAN -->
+    <section id="scan" class="view">
+      <header class="top"><div><h1>Channel Scan</h1><p class="sub">Kisi bhi channel ki saari videos — kaunsi kitni chali, kaunsa topic best.</p></div></header>
+      <div class="bar"><input id="chan" placeholder="@channel ya YouTube link"><button class="btn primary" id="doScan">Scan</button></div>
+      <div id="scanOut"></div>
+    </section>
+
+    <!-- CREATE -->
+    <section id="create" class="view">
+      <header class="top"><div><h1>Create Video</h1><p class="sub">Topic do (ya khali chhodo, AI khud trending topic chunega).</p></div></header>
+      <div class="bar"><input id="topic" placeholder="Topic (optional)"><button class="btn primary" id="go">✦ Create</button></div>
+      <div class="grid2 create">
+        <div class="card"><h3>Progress</h3><ol class="steps" id="steps"></ol><div id="runlog" class="log"></div></div>
+        <div class="card center"><div class="phone"><video id="player" playsinline controls></video><div class="ph-empty" id="phEmpty">9:16 preview yahan aayega</div></div>
+          <div id="captionBox"></div></div>
+      </div>
+    </section>
+
+    <!-- FULL CONTROL -->
+    <section id="control" class="view">
+      <header class="top"><div><h1>Full Control <span class="tag">YouTube</span></h1><p class="sub">App ke andar ka browser — AI sirf isi window me kaam karta hai, PC ko kabhi control nahi karta.</p></div>
+        <div class="fc-btns"><button class="btn" id="fcStart">▶ Start</button><button class="btn primary" id="fcShare" disabled>🤝 Share Control</button><button class="btn danger" id="fcStop" disabled>■ Stop</button></div></header>
+      <div class="fc">
+        <div class="browser card">
+          <div class="chrome"><span class="dots"><b></b><b></b><b></b></span><div class="url" id="fcUrl">youtube.com</div><span class="priv">🔒 Private session</span></div>
+          <div class="viewport" id="fcView"><img id="fcFrame" alt=""><div class="fc-empty" id="fcEmpty"><b>Start dabao</b><span>YouTube khulega → aap khud login karo → Share Control</span></div></div>
+        </div>
+        <div class="fc-side">
+          <div class="card"><h3>Steps</h3><ol class="steps" id="fcSteps"></ol></div>
+          <div class="card"><h3>AI log</h3><div class="log" id="fcLog"></div></div>
+          <div class="card"><h3>Topic list</h3><div id="fcTopics" class="chips"></div></div>
+        </div>
+      </div>
+      <p class="note" id="fcNote"></p>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="settings" class="view">
+      <header class="top"><div><h1>Settings</h1><p class="sub">Saari keys aur options sirf yahin. Keys sirf aapke PC pe save hoti hain.</p></div><button class="btn primary" id="saveAll">Save</button></header>
+      <div class="grid2 settings">
+        <div class="card"><h3>API keys</h3><div id="keys"></div></div>
+        <div>
+          <div class="card"><h3>Content</h3><div id="prefContent" class="form"></div></div>
+          <div class="card"><h3>Posting & schedule</h3><div id="prefPost" class="form"></div></div>
+          <div class="card"><h3>Full Control</h3><div id="prefFc" class="form"></div></div>
+          <div class="card"><h3>Phone se kholo</h3><div id="phoneBox"></div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="chat" id="chat">
+    <div class="chat-h"><div><b>AI Chat</b><small>Bolo kya karna hai — "ye edit karo, ye mat karo"</small></div><button class="btn ghost sm" id="chatClose">✕</button></div>
+    <div class="msgs" id="msgs"></div>
+    <form class="chat-in" id="chatForm"><input id="chatIn" placeholder="e.g. AI tools pe video banao, music mat lagao" autocomplete="off"><button class="btn primary sm">➤</button></form>
+  </aside>
+</div>
+<button class="chat-fab" id="chatFab" aria-label="AI Chat">💬</button>
+<nav class="tabbar" id="tabbar"></nav>
+<div class="pin" id="pinGate" hidden><div class="card"><h3>PIN daalo</h3><p class="sub">PC app → Settings → "Phone se kholo" me PIN hai.</p><input id="pinIn" inputmode="numeric" maxlength="6"><button class="btn primary" id="pinGo">Open</button></div></div>
+<div class="toast" id="toast"></div>
+<script src="demo.js"></script>
+<script src="fcsim.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

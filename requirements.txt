@@ -1,0 +1,11 @@
+requests>=2.31
+python-dotenv>=1.0
+fastapi>=0.110
+uvicorn>=0.29
+edge-tts>=7.0
+pytrends>=4.9
+yt-dlp>=2025.1.1
+google-api-python-client>=2.120
+google-auth-oauthlib>=1.2
+imageio-ffmpeg>=0.5   # ffmpeg fallback if not installed system-wide
+pytest>=8.0
