@@ -111,6 +111,103 @@ def run_pipeline(topic: str | None = None, post: bool | None = None, on_event=No
     (run.dir / "result.json").write_text(json.dumps({k: v for k, v in result.items() if k != "events"}, indent=2, ensure_ascii=False), "utf-8")
     return result
 
+def run_aura(opts: dict | None = None, post: bool | None = None, on_event=None, demo_assets: list[dict] | None = None) -> dict:
+    """AI Animal Aura Reel: consistent character image -> shot stills -> image-to-video (best of all providers,
+    fallback) -> optional lip-sync -> same editor (Roman-Hinglish yellow captions, beat, music ducking).
+    demo_assets: key-free local visuals instead of AI (tests / demo)."""
+    from . import aura
+    s = config.settings(); run = Run(on_event)
+    try:
+        o = aura.normalize_opts({"voice": s.get("aura_voice", "hi-IN-MadhurNeural"), **(opts or {})})
+        lines = aura.gemini_dialogue(o) if o["dialogue_mode"] == "ai" else None
+        plan = aura.build_shot_plan(o, lines)
+        (run.dir / "plan.json").write_text(json.dumps(plan, indent=2, ensure_ascii=False), "utf-8")
+        ch = plan["character"]; shots = plan["shots"]
+        run.log("plan", f"{ch['name']}: {len(shots)} shots, ~{plan['total_seconds']:.0f}s" + (f" — {plan['warning']}" if plan.get("warning") else ""))
+        if not approvals.ask("create", f"Aura reel banaun? “{plan['title']}”",
+                             [f"Character: {ch['name']} ({aura.OUTFITS[o['outfit']]['label']})",
+                              "Shots: " + " → ".join(x["location_label"] for x in shots),
+                              "Line 1: " + shots[0]["line"]["roman"], "CTA: " + plan["cta"]], "pipeline"):
+            run.log("cancelled", "Aapne Cancel kiya — kuch nahi badla"); raise Cancelled()
+        # 1) voice first: real line timings decide each shot's length
+        gap = max(0.25, min(1.2, (plan["total_seconds"] - 2.2 - sum(aura.speech_seconds(x["line"]["roman"]) for x in shots)) / len(shots)))
+        vpath = str(run.dir / "voice.wav")
+        words = voice.speak_lines([x["line"] for x in shots], vpath, engine=s["voice_engine"], voice=plan["voice"], gap=gap)
+        run.log("voice", f"{len(words)} caption words, voice {plan['voice']}")
+        visuals = []
+        if demo_assets:
+            visuals = [demo_assets[i % len(demo_assets)] for i in range(len(shots))]
+            run.log("character", "demo assets (no AI keys)")
+        else:
+            # 2) one character reference image (consistency anchor)
+            ref = str(run.dir / "character.png")
+            ai.image(ch["reference_prompt"], ref, "photo"); run.log("character", f"reference image ready: {ch['name']}")
+            from .videogen import generate_best, available_providers
+            i2v = [p for p in available_providers() if getattr(p, "supports_image", False)]
+            starts = {}
+            for w in words: starts.setdefault(w["line"], w["start"])
+            for i, sh in enumerate(shots):
+                still = str(run.dir / f"shot{i+1}.png")
+                ai.image(sh["image_prompt"], still, "photo", ref_image=ref); run.log("shots", f"shot {i+1} still: {sh['location_label']}")
+                v = {"path": still, "type": "image", "source": "gemini-ai"}
+                if i2v:
+                    g = generate_best(sh["video_prompt"], str(run.dir / f"aivideo{i+1}"), style="photo", seconds=sh["gen_seconds"],
+                                      providers=i2v, extra={p.name: {"image_path": still} for p in i2v})
+                    run.log("ai_video", f"shot {i+1}: tried {g['tried']}", best=(g["best"] or {}).get("provider"),
+                            scores={r["provider"]: r["score"] for r in g["results"]}, errors=g["errors"])
+                    if g["best"]: v = {"path": g["best"]["path"], "type": "video", "source": g["best"]["provider"]}
+                else:
+                    run.log("ai_video", f"shot {i+1}: koi image-to-video key nahi (Veo/Kling/Runway/fal) — still + zoom use hoga")
+                # 3) optional lip-sync on talking shots
+                if v["type"] == "video" and sh.get("lipsync") and s.get("aura_lipsync", True):
+                    from . import lipsync
+                    if lipsync.available():
+                        try:
+                            a0 = starts.get(i, 0.0); a1 = starts.get(i + 1, a0 + sh["duration"])
+                            seg = str(run.dir / f"line{i+1}.mp3")
+                            from .ff import ffmpeg
+                            ffmpeg(["-i", vpath, "-ss", f"{max(0, a0 - 0.05):.3f}", "-to", f"{a1:.3f}", "-c:a", "libmp3lame", "-b:a", "96k", seg])
+                            v = {**v, "path": lipsync.apply(v["path"], seg, str(run.dir / f"lipsync{i+1}.mp4")), "lipsync": True}
+                            run.log("lipsync", f"shot {i+1}: lip-sync done")
+                        except Exception as e:
+                            run.log("lipsync", f"shot {i+1}: skipped ({e})")
+                    else:
+                        run.log("lipsync", "FAL_KEY nahi — lip-sync skip (voice + captions phir bhi)")
+                visuals.append(v)
+        # 4) same editor: Roman-Hinglish word captions, yellow keywords, beat/music ducking, end card
+        out = str(run.dir / "final.mp4")
+        info = editor.assemble(editor.segments_from_words(visuals, words), vpath, words, out,
+                               music=media.local_music(), end_card=s.get("end_card"), music_volume=0.3)
+        run.log("edit", f"{info['width']}x{info['height']} {info['duration']:.1f}s", path=out)
+        script = aura.to_script(plan)
+        caption = f"{script['title']}\n\n{script['description']}\n\n{' '.join(script['hashtags'][:5])}"
+        (run.dir / "caption.txt").write_text(caption, "utf-8")
+        posts = []
+        do_post = (s["post_youtube"] or s["post_instagram"] or s["post_pinterest"]) if post is None else post
+        targets = [n for f, n in (("post_youtube", "YouTube"), ("post_instagram", "Instagram"), ("post_pinterest", "Pinterest")) if s.get(f)]
+        if do_post and targets and not approvals.ask("post", f"Post karun? {' + '.join(targets)}",
+                                                     [f"Title: {script['title']}", f"Privacy (YouTube): {s['privacy']}"], "pipeline"):
+            run.log("post", "Post cancel — video sirf PC pe saved hai"); do_post = False
+        if do_post:
+            from . import poster
+            for flag, fn in (("post_youtube", lambda: poster.youtube_upload(out, script["title"], caption, script["tags"], s["privacy"])),
+                             ("post_instagram", lambda: poster.instagram_reel(out, caption)),
+                             ("post_pinterest", lambda: poster.pinterest_video_pin(out, script["title"], caption))):
+                if s.get(flag):
+                    try:
+                        p = fn(); posts.append(p); tracker.record(p, script["title"], run.id); run.log("post", f"{p['platform']}: {p['url']}")
+                    except Exception as e:
+                        run.log("post", f"{flag} failed: {e}")
+        result = {"ok": True, "run": run.id, "template": "animal_aura", "video": out, "title": script["title"], "caption": caption,
+                  "posts": posts, "plan": plan, "events": run.events}
+    except Cancelled:
+        result = {"ok": False, "run": run.id, "cancelled": True, "error": "cancelled", "events": run.events}
+    except Exception as e:
+        run.log("error", str(e), trace=traceback.format_exc()[-1500:])
+        result = {"ok": False, "run": run.id, "error": str(e), "events": run.events}
+    (run.dir / "result.json").write_text(json.dumps({k: v for k, v in result.items() if k != "events"}, indent=2, ensure_ascii=False), "utf-8")
+    return result
+
 def make_demo_assets(folder: str) -> list[dict]:
     """Key-free local test visuals (generated, copyright-free): 2 moving clips + 2 images."""
     from .ff import ffmpeg

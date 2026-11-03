@@ -24,6 +24,41 @@
     .map(([group,name,label,url,why,set]) => ({group,name,label,url,why,set:!!set,preview:set?"AIz…x9":""}));
   const approvals = [{ id: "demo1", kind: "post", title: "Post karun? YouTube + Instagram", created: "18:30:12", status: "pending",
       details: ["Title: Free AI tool jo topic + title + hashtag sab dega 🔥", "Hashtags: #viral #aitools #youtubetips #growonyoutube #reels", "Privacy (YouTube): private"] }];
+
+  // ---- AI Animal Aura Reel (demo: same plan logic as backend/socialcontrol/aura.py, sample data) ----
+  const AURA_OPT = {"template": "animal_aura", "label": "🦁 AI Animal Aura Reel", "animals": [{"id": "black_lion", "label": "Black Lion"}, {"id": "white_lion", "label": "White Lion"}, {"id": "golden_lion", "label": "Golden Lion"}, {"id": "bengal_tiger", "label": "Bengal Tiger"}, {"id": "white_tiger", "label": "White Tiger"}, {"id": "black_panther_cat", "label": "Black Panther (animal)"}, {"id": "snow_leopard", "label": "Snow Leopard"}, {"id": "wolf", "label": "Grey Wolf"}, {"id": "gorilla", "label": "Silverback Gorilla"}, {"id": "eagle", "label": "Golden Eagle"}], "outfits": [{"id": "black_suit", "label": "Black designer suit"}, {"id": "white_suit", "label": "White designer suit"}, {"id": "navy_tux", "label": "Navy tuxedo"}, {"id": "leather", "label": "Leather jacket"}, {"id": "sherwani", "label": "Royal sherwani"}], "locations": [{"id": "yacht", "label": "Luxury yacht"}, {"id": "mansion", "label": "Mansion"}, {"id": "supercar", "label": "Supercar"}, {"id": "jet", "label": "Private jet"}, {"id": "rooftop", "label": "City rooftop"}, {"id": "throne", "label": "Throne room"}, {"id": "casino", "label": "Luxury lounge"}], "presets": [{"id": "rival_rich", "label": "Rival vs me (aura/amir)"}, {"id": "king", "label": "Raja sirf ek"}], "dialogue_modes": [{"id": "preset", "label": "Ready script"}, {"id": "ai", "label": "Gemini 4 lines likhe"}, {"id": "mine", "label": "Apni lines"}], "note": "Sirf original characters. Dusre creators ke named characters / reels copy nahi hote."};
+  const AURA_A = {"black_lion": {"hi": "काला शेर", "heart": "🖤", "hw": "black"}, "white_lion": {"hi": "सफ़ेद शेर", "heart": "🤍", "hw": "white"}, "golden_lion": {"hi": "शेर", "heart": "💛", "hw": "yellow"}, "bengal_tiger": {"hi": "बाघ", "heart": "🧡", "hw": "orange"}, "white_tiger": {"hi": "सफ़ेद बाघ", "heart": "🤍", "hw": "white"}, "black_panther_cat": {"hi": "काला तेंदुआ", "heart": "🖤", "hw": "black"}, "snow_leopard": {"hi": "हिम तेंदुआ", "heart": "🤍", "hw": "white"}, "wolf": {"hi": "भेड़िया", "heart": "🩶", "hw": "grey"}, "gorilla": {"hi": "गोरिल्ला", "heart": "🖤", "hw": "black"}, "eagle": {"hi": "बाज़", "heart": "💛", "hw": "yellow"}};
+  const AURA_P = {"rival_rich": [["Suna hai aajkal {rival} ka aura bahut badh gaya hai...", "सुना है आजकल {rival_hi} का ऑरा बहुत बढ़ गया है...", ["aura"]], ["Kya sach me wo mujhse zyada amir hai? Uski poori zindagi ki kamai... meri ek gaadi ki keemat hai.", "क्या सच में वो मुझसे ज़्यादा अमीर है? उसकी पूरी ज़िंदगी की कमाई... मेरी एक गाड़ी की कीमत है।", ["amir", "gaadi"]], ["Paisa sabke paas hota hai... par aura? Aura sirf {me} ka chalta hai.", "पैसा सबके पास होता है... पर ऑरा? ऑरा सिर्फ़ {me_hi} का चलता है।", ["aura", "{me_first}"]], ["Agar {me} ka aura zyada hai, to {n} {heart} {heart_word} hearts bhejo!", "अगर {me_hi} का ऑरा ज़्यादा है, तो {n_hi} {heart_word} hearts भेजो!", ["{n}", "hearts"]]], "king": [["Jungle me sher bahut hain... par raja sirf ek.", "जंगल में शेर बहुत हैं... पर राजा सिर्फ़ एक।", ["raja"]], ["Log mehnat dekhte hain, main result dikhata hoon.", "लोग मेहनत देखते हैं, मैं result दिखाता हूँ।", ["result"]], ["Ye gaadi, ye jet... sab apne dum pe.", "ये गाड़ी, ये जेट... सब अपने दम पे।", ["dum"]], ["{me} ka aura pasand aaya? To {n} {heart} {heart_word} hearts bhejo!", "{me_hi} का ऑरा पसंद आया? तो {n_hi} {heart_word} hearts भेजो!", ["{n}", "hearts"]]]};
+  const NUM_HI = { "100": "सौ", "500": "पाँच सौ", "1000": "एक हज़ार", "5000": "पाँच हज़ार", "10000": "दस हज़ार" };
+  const MOVES = [["glasses_off","slowly takes off the sunglasses and stares into the camera","slow push-in, low angle","slowmo"],
+    ["walk","walks toward the camera in slow motion with confident swagger","tracking shot, low angle","slowmo"],
+    ["key_spin","spins a car key on one finger and smirks","medium close-up","zoom"],
+    ["glasses_on","puts the sunglasses back on, suit jacket flowing in the wind","slow orbit","slowmo"],
+    ["point","looks straight into the lens and points at the camera","close-up, eye level","flash"]];
+  const label = (list, id) => (list.find(x => x.id === id) || {}).label || id;
+  function auraPlan(o) {
+    const nm = (o.name || "") + " " + (o.dialogue || "");
+    if (/@[a-z0-9_.]{2,}|https?:\/\/|\b(copy|clone|same as|hubahu)\b|simba|mufasa|shere khan|bagheera|tigress/i.test(nm))
+      throw new Error("Original character hi chalega — link/@handle/copy/kisi aur ka character block hai 🙂");
+    const a = AURA_A[o.animal], me = label(AURA_OPT.animals, o.animal), rival = o.animal === "white_lion" ? "Black Lion" : "White Lion";
+    const rk = Object.keys(AURA_A).find(k => label(AURA_OPT.animals, k) === rival);
+    const f = { me, me_hi: a.hi, me_first: me.split(" ")[0], rival, rival_hi: AURA_A[rk].hi, n: String(o.hearts || 1000), n_hi: NUM_HI[String(o.hearts || 1000)] || String(o.hearts), heart: a.heart, heart_word: a.hw };
+    const fill = s => s.replace(/\{(\w+)\}/g, (_, k) => f[k] ?? "");
+    let lines = o.dialogue_mode === "mine" && (o.dialogue || "").trim()
+      ? o.dialogue.split("\n").map(x => x.split("|")[0].trim()).filter(Boolean).slice(0, 6).map(r => ({ roman: r }))
+      : (AURA_P[o.preset] || AURA_P.rival_rich).map(([r]) => ({ roman: fill(r) }));
+    const beat = 60 / 100, sp = r => r.split(/\s+/).length / 3 + 0.3 * ((r.match(/\.\.\./g) || []).length + (r.match(/\?/g) || []).length) + 0.3;
+    const raw = lines.map(l => sp(l.roman)), scale = Math.max(1, (22 - 2.2) / raw.reduce((x, y) => x + y, 0));
+    let t = 0; const shots = lines.map((l, i) => { const m = i === lines.length - 1 ? MOVES[4] : MOVES[i % 4], loc = o.locations[i % o.locations.length];
+      const d = Math.max(beat, Math.ceil(raw[i] * scale / beat - 1e-9) * beat); const s = { n: i + 1, start: t, duration: d, location: loc, location_label: label(AURA_OPT.locations, loc),
+        move: m[0], action: m[1], camera: m[2], effect: m[3], line: l, lipsync: true }; t += d; return s; });
+    const total = t + 2.2, cta = `${f.n} ${a.heart} ${a.hw} hearts bhejo`;
+    return { template: "animal_aura", character: { name: (o.name || me).trim() }, shots, bpm: 100, total_seconds: total, cta,
+      title: `${(o.name || me).trim()} ka aura 😎${a.heart} | ${cta}`, warning: total > 26 ? `Dialogue lamba hai (~${Math.round(total)}s). 20-25s ke liye lines chhoti karo.` : null };
+  }
+  const AURA_STEPS = [["plan", "Black Lion: 4 shots, ~26s"], ["voice", "52 caption words, voice hi-IN-MadhurNeural"], ["character", "reference image ready: Black Lion"],
+    ["shots", "4 shot stills (same character): Supercar → Private jet → Mansion → Supercar"], ["ai_video", "image→video: tried veo, kling, fal — best: kling (score 82)"],
+    ["lipsync", "4 talking shots lip-synced"], ["edit", "1080x1920 25.8s · Roman-Hinglish yellow captions · beat cuts"]];
   window.SC_DEMO_SCAN_ROWS = SCAN.top_videos; window.SC_DEMO_TOTAL = SCAN.total_videos;
   SCAN.top_topics = SCAN.top_topics.filter(t => !["live","proof"].includes(t.keyword));
   window.SC_DEMO_TOPICS = SCAN.top_topics.map(t => t.keyword).concat(["free ai tools", "youtube growth"]);
@@ -40,13 +75,18 @@
     if (p === "/api/scan") return SCAN;
     if (p === "/api/approvals" && m === "GET") return approvals.filter(a => a.status === "pending");
     if (p.startsWith("/api/approvals/")) { const a = approvals.find(x => x.id === p.split("/").pop()); if (a) a.status = opt.body?.accept ? "accepted" : "cancelled"; return a; }
-    if (p === "/api/create") { job = { id: "demo", t0: Date.now() }; return job; }
-    if (p.startsWith("/api/jobs/")) { const n = Math.min(JOBSTEPS.length, 1 + Math.floor((Date.now() - job.t0) / 1400));
-      const ev = JOBSTEPS.slice(0, n).map(([step, msg], i) => ({ t: "18:30:" + String(10 + i * 7).padStart(2, "0"), step, msg }));
-      const done = n >= JOBSTEPS.length; return { id: "demo", status: done ? "done" : "running", events: ev,
-        result: done ? { ok: true, run: "demo", caption: "Free AI video tools jo koi nahi batata 😱\n\nComment karo AI 👇\n\n#viral #aitools #youtubetips #growonyoutube #reels" } : null }; }
+    if (p === "/api/aura/options") return AURA_OPT;
+    if (p === "/api/aura/plan") return auraPlan(opt.body || {});
+    if (p === "/api/create") { if (opt.body?.template === "animal_aura") auraPlan(opt.body.aura || {});
+      job = { id: "demo", t0: Date.now(), tpl: opt.body?.template, aura: opt.body?.aura }; return job; }
+    if (p.startsWith("/api/jobs/")) { const steps = job.tpl === "animal_aura" ? AURA_STEPS : JOBSTEPS; const n = Math.min(steps.length, 1 + Math.floor((Date.now() - job.t0) / 1400));
+      const ev = steps.slice(0, n).map(([step, msg], i) => ({ t: "18:30:" + String(10 + i * 7).padStart(2, "0"), step, msg }));
+      const done = n >= steps.length; const cap = job.tpl === "animal_aura" ? (() => { const pl = auraPlan(job.aura || {}); return `${pl.title}\n\n${pl.character.name} ka aura kaisa laga? 👇\nComment me ${pl.cta}! 🔥\n\n#aura #lion #viral #reels #attitude`; })()
+        : "Free AI video tools jo koi nahi batata 😱\n\nComment karo AI 👇\n\n#viral #aitools #youtubetips #growonyoutube #reels";
+      return { id: "demo", status: done ? "done" : "running", events: ev, result: done ? { ok: true, run: "demo", template: job.tpl, caption: cap } : null }; }
     if (p === "/api/chat") { const q = (opt.body?.message || "").toLowerCase();
       if (/mat|band|off/.test(q)) { approvals.push({ id: "c" + Date.now(), kind: "settings", title: "Settings badlunga", created: new Date().toTimeString().slice(0, 8), status: "pending", details: [/insta/.test(q) ? "post_instagram: true → false" : "use_ai_video: true → false"] }); return { reply: "Theek hai 👍 pehle permission card dekh lo.", done: [] }; }
+      if (/aura|lion|tiger|sher\b/.test(q)) return { reply: "AI Animal Aura template khol diya 🦁 Animal, outfit, location chuno → Plan dekho → Create.", goto: "create", template: "animal_aura" };
       if (/scan/.test(q)) return { reply: "Channel scan khol raha hoon 📊", goto: "scan" };
       if (/trend/.test(q)) return { reply: "Abhi ke viral topics dikha raha hoon 🔥", goto: "trends" };
       if (/video/.test(q)) return { reply: "Video bana raha hoon — Accept karoge tab shuru hoga.", job: "demo", topic: "AI video tools" };

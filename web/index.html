@@ -56,8 +56,24 @@
 
     <!-- CREATE -->
     <section id="create" class="view">
-      <header class="top"><div><h1>Create Video</h1><p class="sub">Topic do (ya khali chhodo, AI khud trending topic chunega).</p></div></header>
-      <div class="bar"><input id="topic" placeholder="Topic (optional)"><button class="btn primary" id="go">✦ Create</button></div>
+      <header class="top"><div><h1>Create Video</h1><p class="sub" id="createSub">Topic do (ya khali chhodo, AI khud trending topic chunega).</p></div></header>
+      <div class="seg" id="tplSeg"><button data-tpl="normal" class="on">✦ Normal video</button><button data-tpl="animal_aura">🦁 AI Animal Aura Reel <span class="hot">viral</span></button></div>
+      <div id="tplNormal" class="bar"><input id="topic" placeholder="Topic (optional)"><button class="btn primary" id="go">✦ Create</button></div>
+      <div id="tplAura" class="card aura" hidden>
+        <div class="aura-form">
+          <label>Animal<select id="auAnimal"></select></label>
+          <label>Outfit<select id="auOutfit"></select></label>
+          <label>Character naam (original)<input id="auName" placeholder="e.g. Kaala Badshah"></label>
+          <label>CTA hearts<select id="auHearts"><option>1000</option><option>500</option><option>5000</option><option>10000</option></select></label>
+          <div class="full"><span class="lbl">Locations (shot order)</span><div class="chips" id="auLocs"></div></div>
+          <label>Dialogue<select id="auMode"></select></label>
+          <label id="auPresetWrap">Script<select id="auPreset"></select></label>
+          <label class="full" id="auMineWrap" hidden>Apni lines (1 line = 1 shot · optional: roman | देवनागरी)<textarea id="auLines" rows="4" placeholder="Suna hai aajkal White Lion ka aura bahut badh gaya hai..."></textarea></label>
+        </div>
+        <div class="aura-act"><button class="btn" id="auPlanBtn">📋 Shot plan dekho</button><button class="btn primary" id="auGo">🦁 Create Reel</button></div>
+        <p class="note">🛡 Sirf <b>original</b> characters — dusre creators ke named characters / reels copy nahi hote (link, @handle, "copy" block). Trending sound Instagram app me post karte waqt lagao.</p>
+        <div id="auPlan" class="shots"></div>
+      </div>
       <div class="grid2 create">
         <div class="card"><h3>Progress</h3><ol class="steps" id="steps"></ol><div id="runlog" class="log"></div></div>
         <div class="card center"><div class="phone"><video id="player" playsinline controls></video><div class="ph-empty" id="phEmpty">9:16 preview yahan aayega</div></div>

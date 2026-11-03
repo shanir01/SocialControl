@@ -18,6 +18,7 @@ PC (Windows/Mac/Linux) app + phone dashboard. Har badlaav se pehle AI chat me **
 | **Trends** | YouTube trending (India) + Google Trends + Instagram hashtags → viral score ke saath topic list |
 | **Channel Scan** | Kisi bhi channel ki saari videos + views → **100+, 200+, 300+, 400+, 500+, 1K+, 10K+…** buckets → sabse zyada chalne wale topics |
 | **Create Video** | Topic → Gemini script/title/description/5 hashtags → stock clips / AI images / AI video → Hindi voice → 9:16 edit (Roman-Hinglish word-by-word captions, **yellow keyword highlight**, music ducking) → post |
+| **Create Video → 🦁 AI Animal Aura Reel** | Template (isi screen me, alag menu nahi): animal + outfit + location(s) chuno, dialogue (ready script / Gemini 4 Hindi lines / apni lines) → ek **consistent character image** → har shot ka still → **image-to-video** (saare configured providers, score + fallback) → optional **lip-sync** → same editor (Roman-Hinglish yellow captions, beat cuts, music) · ~20-25s · CTA "1000 hearts bhejo" |
 | **Full Control** | App ke **andar** ka private browser: aap khud login karo → **Share Control** → AI YouTube Studio me channel analyse karta hai → topic list → videos banata hai. Animated cursor se sab dikhta hai |
 | **Settings** | Saari API keys + saare options **sirf yahin** (har option ek hi jagah) |
 | **AI Chat (side panel)** | "AI tools pe video banao", "Instagram pe post mat karo" — AI app ke features chalata hai |
@@ -29,6 +30,32 @@ PC (Windows/Mac/Linux) app + phone dashboard. Har badlaav se pehle AI chat me **
 - **Password kabhi app me nahi:** login aap khud Google ke apne page pe karte ho.
 - **Keys sirf aapke PC pe** (`data/settings.json` ya `.env`) — dono `.gitignore` me hain, GitHub pe kabhi nahi jaate. GitHub Actions me keys **repo Secrets** me.
 - **Copyright-safe:** sirf Pexels, Pixabay (free license), AI images/videos, aur aapki apni music files. Dusron ka content (Pinterest/Instagram se uthana) is app me nahi hai — edit karke bhi strike aa sakti hai. Pinterest sirf **apni** video post karne ke liye (optional).
+
+---
+
+## 🦁 AI Animal Aura Reel (Create Video ka template)
+
+Abhi ka sabse viral IG format: realistic **anthropomorphic animal** (lion / tiger / panther…) designer suit, sunglasses, gold chain me — yacht, mansion, supercar, private jet — slow-mo swagger shots, chhota Hindi attitude dialogue + lip-sync, end me **"1000 🖤 hearts bhejo"**.
+
+![Aura template](docs/screens/aura.jpg)
+
+**Kaise:** Create Video → upar **🦁 AI Animal Aura Reel** → Animal, Outfit, Character naam, Locations (click order = shot order), Dialogue → **📋 Shot plan dekho** (key-free preview: har shot ka time, location, line, camera move) → **🦁 Create Reel** → chat me permission card → Accept.
+
+| Step | Kya hota hai | Key (Settings me) |
+|---|---|---|
+| 1. Dialogue | Ready script, ya Gemini 4 short Hindi lines likhta hai, ya aapki apni lines (`roman \| देवनागरी`) | Gemini optional |
+| 2. Voice | Deep male Hindi voice (Edge TTS `hi-IN-MadhurNeural`, free) — har line ka asli time shot ki length tay karta hai (100 BPM beat pe cut) | — |
+| 3. Character | Ek **reference image** (same character har shot me) | `GEMINI_API_KEY` |
+| 4. Shot stills | Reference image + scene → har shot ka still (wahi chehra, wahi suit) | `GEMINI_API_KEY` |
+| 5. Image → video | Har still ko animate: Veo, Kling, Runway, fal — jitne keys hain sab try, **best score wala**, fail/quota pe agla. Koi key nahi → still + zoom | `GEMINI`(Veo) / `KLING_*` / `RUNWAY_API_KEY` / `FAL_KEY` |
+| 6. Lip-sync | Talking shots ka muh voice ke saath (fal sync-lipsync). Key nahi → skip | `FAL_KEY` |
+| 7. Edit | Same editor: Roman-Hinglish word captions + yellow keywords, music ducking, end card | — |
+
+**Trending beat:** Instagram ka trending sound app ke andar copy nahi hota (copyright). Post karte waqt **Instagram app me IG library se** lagao, ya apni royalty-free beat `assets/music/` me rakho.
+
+**🛡 Original characters only:** template kabhi dusre creator ka named character / reel copy nahi karta. Link, `@handle`, "copy/clone/hubahu" aur film/cartoon names (Simba, Shere Khan…) block hain. Apne block names `data/blocked_characters.txt` me daalo (1 line = 1 naam).
+
+Code: `backend/socialcontrol/aura.py` (options, guard, dialogue, shot plan — sab key-free, tested in `backend/tests/test_aura.py`), `pipeline.run_aura()`, `lipsync.py`. Settings: `aura_voice`, `aura_lipsync`.
 
 ---
 
@@ -73,7 +100,7 @@ Sirf server (bina desktop app, Linux/Mac/Termux): `bash scripts/start-server-onl
 | YouTube `client_secret.json` | Auto upload + Full Control edits | [Google Cloud → Credentials → OAuth client ID → Desktop app](https://console.cloud.google.com/apis/credentials) → JSON download → repo folder me `client_secret.json` naam se rakho → Settings → **Connect YouTube** | Posting ke liye |
 | `IG_ACCESS_TOKEN` + `IG_USER_ID` | Reels post + IG hashtag trends | IG ko **Professional (Creator/Business)** banao + Facebook Page se link → [developers.facebook.com](https://developers.facebook.com/tools/explorer/) (permissions: `instagram_content_publish`, `instagram_basic`, `pages_show_list`) | Instagram ke liye |
 | `ELEVENLABS_API_KEY` | Premium voice | [elevenlabs.io](https://elevenlabs.io/app/settings/api-keys) | Optional — **Edge TTS free hai, Hindi voice, key nahi** |
-| `FAL_KEY` / `KLING_*` / `RUNWAY_API_KEY` / `LUMA_API_KEY` | AI video (cartoon, 3D, real) | [fal.ai](https://fal.ai/dashboard/keys) · [Kling](https://app.klingai.com/global/dev/api-key) · [Runway](https://dev.runwayml.com/) · [Luma](https://lumalabs.ai/dream-machine/api/keys) | Optional (mostly paid) |
+| `FAL_KEY` / `KLING_*` / `RUNWAY_API_KEY` / `LUMA_API_KEY` | AI video (cartoon, 3D, real) + Aura reel image→video; `FAL_KEY` = lip-sync bhi | [fal.ai](https://fal.ai/dashboard/keys) · [Kling](https://app.klingai.com/global/dev/api-key) · [Runway](https://dev.runwayml.com/) · [Luma](https://lumalabs.ai/dream-machine/api/keys) | Optional (mostly paid) |
 | `PINTEREST_ACCESS_TOKEN` + `PINTEREST_BOARD_ID` | Apni video Pinterest pe post | [developers.pinterest.com](https://developers.pinterest.com/apps/) | Optional |
 
 Saari list `.env.example` me bhi hai (har key ke saath link).
@@ -97,7 +124,7 @@ cd backend
 python -m socialcontrol demo        # local test visuals + free Hindi voice -> 9:16 captioned mp4 (data/runs/...)
 python -m socialcontrol trends      # Google Trends (no key)
 python -m socialcontrol scan @javagoat9   # public channel list (no key) -> buckets + top topics
-python -m pytest -q                 # 19 tests: buckets, scoring, fallback, captions, editor, permission gate
+python -m pytest -q                 # 33 tests: buckets, scoring, fallback, captions, editor, permission gate, Aura reel plan/guard
 ```
 
 ## ⚠️ Full Control — zaroori baat
@@ -116,7 +143,7 @@ web/                     Dashboard UI (PWA, phone + desktop) — demo mode: add 
 ```
 
 ## ✅ Kya test hua / kya aapki keys se test hoga
-**Test ho chuka (bina key):** Google Trends topics, channel scan (@javagoat9: 24 videos, 53K views — buckets + top topics), Edge TTS Hindi voice, 9:16 editor (captions, yellow highlight, end card, ducking), AI-video scoring + auto-fallback + quota cooldown, permission gate, scheduler, chat rules — 19 tests pass.
+**Test ho chuka (bina key):** Google Trends topics, channel scan (@javagoat9: 24 videos, 53K views — buckets + top topics), Edge TTS Hindi voice, 9:16 editor (captions, yellow highlight, end card, ducking), AI-video scoring + auto-fallback + quota cooldown, permission gate, scheduler, chat rules, **AI Animal Aura** shot plan + originality guard + image→video wiring + key-free end-to-end reel (demo visuals) — 33 tests pass.
 **Aapki keys se pehli baar chalega (code ready, live test baaki):** Gemini script/images/chat, Pexels/Pixabay download, Veo/Kling/Runway/Luma/fal video, YouTube upload + edits (OAuth), Instagram Reels publish, Pinterest pin, views refresh, desktop app ka Full Control (Windows pe `npm start`).
 
 MIT License · Made with ❤️ for NISHU

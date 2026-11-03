@@ -134,3 +134,28 @@ body.chat-open .chat-fab{display:none!important}
  .tabbar a.on{color:var(--text)}.tabbar a.on i{color:var(--a2)}.orb{width:360px;height:360px}
  .buckets{height:150px;gap:5px}.bk small{font-size:10.5px}
 }
+
+/* AI Animal Aura template (inside Create Video) */
+.seg{display:inline-flex;gap:4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:8px 14px;border-radius:10px;cursor:pointer;color:var(--mut);font-size:14px}
+.seg button.on{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px rgba(255,122,24,.45)}
+.seg .hot{font-size:10.5px;padding:2px 6px;border-radius:99px;background:rgba(255,122,24,.16);color:#ffb26b;margin-left:4px;vertical-align:1px}
+.aura{margin-bottom:18px}
+.aura-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.aura-form label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--mut)}
+.aura-form .full{grid-column:1/-1}.aura-form .lbl{font-size:12.5px;color:var(--mut);display:block;margin-bottom:6px}
+.aura-form textarea{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px;outline:none;width:100%;resize:vertical;font:inherit;color:inherit}
+.aura .chips{margin-bottom:0}.aura .chip{cursor:pointer;user-select:none}.aura .chip.on{border-color:rgba(255,122,24,.7);background:rgba(255,122,24,.14);color:#ffd2a8}
+.aura .chip b{font-size:10.5px;margin-right:5px;color:#ffb26b}
+.aura-act{display:flex;gap:10px;margin:14px 0 8px}
+.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:12px}
+.shot{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;font-size:13px;min-width:0}
+.shot .sh-h{display:flex;justify-content:space-between;color:var(--mut);font-size:11.5px;margin-bottom:6px}
+.shot .sh-l{font-weight:700;margin-bottom:6px}.shot q{display:block;color:#ffe27a;font-style:normal;line-height:1.35}
+.shot small{display:block;color:var(--mut);margin-top:6px}
+.plan-sum{grid-column:1/-1;font-size:13px;color:var(--mut)}.plan-sum b{color:var(--text)}.plan-warn{color:#ffb26b}
+@media (max-width:760px){.aura-form{grid-template-columns:1fr 1fr}.aura-act .btn{flex:1}}
+[hidden]{display:none!important}
+.shot q::before,.shot q::after{content:none}
+.aura-act{flex-wrap:wrap}.aura-act .btn{min-width:0}
+@media (max-width:760px){.aura-act .btn{flex:1 1 0;padding:11px 8px;font-size:14px}.seg{display:flex}.seg button{flex:1 1 auto}}

@@ -78,16 +78,39 @@ def api_scan(channel: str = "", platform: str = "youtube"):
     except Exception as e:
         raise HTTPException(400, str(e))
 
-def _job(topic, post):
-    jid = uuid.uuid4().hex[:8]; JOBS[jid] = {"id": jid, "topic": topic, "status": "running", "events": [], "result": None}
+def _job(topic, post, template=None, aura_opts=None):
+    jid = uuid.uuid4().hex[:8]; JOBS[jid] = {"id": jid, "topic": topic, "template": template or "normal", "status": "running", "events": [], "result": None}
     def go():
-        r = pipeline.run_pipeline(topic or None, post=post, on_event=lambda e: JOBS[jid]["events"].append(e))
+        ev = lambda e: JOBS[jid]["events"].append(e)
+        r = (pipeline.run_aura(aura_opts, post=post, on_event=ev) if template == "animal_aura"
+             else pipeline.run_pipeline(topic or None, post=post, on_event=ev))
         JOBS[jid].update(status="done" if r["ok"] else "failed", result={k: v for k, v in r.items() if k != "events"})
     threading.Thread(target=go, daemon=True).start(); return JOBS[jid]
 
 @app.post("/api/create")
 def create(body: dict = Body(default={})):
+    if body.get("template") == "animal_aura":
+        from . import aura
+        try: aura.normalize_opts(body.get("aura"))  # validate + originality guard before starting
+        except ValueError as e: raise HTTPException(400, str(e))
+        return _job(None, body.get("post"), "animal_aura", body.get("aura"))
     return _job(body.get("topic"), body.get("post"))
+
+# --- AI Animal Aura Reel template (lives inside Create Video) ---
+@app.get("/api/aura/options")
+def aura_options():
+    from . import aura
+    return aura.options()
+
+@app.post("/api/aura/plan")
+def aura_plan(body: dict = Body(default={})):
+    """Preview: shot plan + prompts. Gemini writes the 4 lines only when dialogue_mode='ai' and the key is set."""
+    from . import aura
+    try:
+        o = aura.normalize_opts(body)
+        return aura.build_shot_plan(o, aura.gemini_dialogue(o) if o["dialogue_mode"] == "ai" else None)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 @app.get("/api/jobs/{jid}")
 def job(jid: str):

@@ -80,10 +80,17 @@ def comment_reply(video_title: str, comment: str) -> str:
          "Write one short friendly Hinglish reply (max 20 words, 0-1 emoji). If spam/abuse reply exactly SKIP.")
     return _text(_gen([{"text": p}])).strip()
 
-def image(prompt: str, out_path: str, style: str = "photo") -> str:
+def image(prompt: str, out_path: str, style: str = "photo", ref_image: str | None = None) -> str:
+    """ref_image: a character reference picture — Gemini keeps that exact character in the new scene (consistency)."""
     styles = {"photo": "photorealistic, cinematic lighting", "cartoon": "2D cartoon illustration, bold outlines, bright colors",
               "3d": "3D Pixar-style render, soft lighting", "stock": "photorealistic"}
-    j = _gen([{"text": f"{prompt}. Style: {styles.get(style, style)}. Vertical 9:16 composition, no text, no logos."}], model=IMAGE_MODEL, image=True)
+    parts = []
+    if ref_image:
+        mime = "image/jpeg" if ref_image.lower().endswith((".jpg", ".jpeg")) else "image/png"
+        parts.append({"inlineData": {"mimeType": mime, "data": base64.b64encode(open(ref_image, "rb").read()).decode()}})
+        prompt = "Keep EXACTLY the same character from the reference image (same face, fur, outfit, accessories). " + prompt
+    parts.append({"text": f"{prompt}. Style: {styles.get(style, style)}. Vertical 9:16 composition, no text, no logos."})
+    j = _gen(parts, model=IMAGE_MODEL, image=True)
     for p in j.get("candidates", [{}])[0].get("content", {}).get("parts", []):
         if "inlineData" in p:
             open(out_path, "wb").write(base64.b64decode(p["inlineData"]["data"]))

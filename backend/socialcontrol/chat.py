@@ -5,12 +5,13 @@ import json, re
 from . import config, approvals
 
 SYSTEM = """You are the assistant inside the SocialControl app (Hinglish). Map the user's message to ONE action. Return ONLY JSON:
-{"action": "find_trends"|"scan"|"create_video"|"set_settings"|"answer", "args": {...}, "reply": "short Hinglish reply"}
-find_trends args {"niche"}; scan args {"channel"}; create_video args {"topic"};
+{"action": "find_trends"|"scan"|"create_video"|"aura_reel"|"set_settings"|"answer", "args": {...}, "reply": "short Hinglish reply"}
+find_trends args {"niche"}; scan args {"channel"}; create_video args {"topic"}; aura_reel = AI animal (lion/tiger) aura reel template, args {};
 set_settings args {"changes": {key: value}} using ONLY these keys: SETTINGS_KEYS. Example: "music mat lagao" is not a key -> answer.
 "ye mat karo" style negatives usually map to switching a boolean setting off. Never invent actions outside the app."""
 
 RULES = [
+    (r"aura|animal reel|lion|tiger|\bsher\b|bhaukaal", "aura_reel"),
     (r"trend|viral kya|kya chal raha", "find_trends"),
     (r"scan|channel check|analy[sz]", "scan"),
     (r"video (bana|bnao|banao|create)|banao video|make video", "create_video"),
@@ -50,6 +51,8 @@ def handle(msg: str, start_job) -> dict:
     elif act == "scan":
         if args.get("channel"): config.save_settings({"channel_to_scan": args["channel"]})
         out["goto"] = "scan"
+    elif act == "aura_reel":   # opens Create Video with the AI Animal Aura template selected (no separate menu)
+        out.update(goto="create", template="animal_aura", reply="AI Animal Aura template khol diya 🦁 Animal, outfit, location chuno → Plan dekho → Create.")
     elif act == "create_video":
         j = start_job(args.get("topic") or None, None)   # the pipeline itself asks permission before making/posting
         out.update(job=j["id"], topic=args.get("topic"), reply=out["reply"] + " Permission card aa raha hai, Accept karoge to video banegi.")

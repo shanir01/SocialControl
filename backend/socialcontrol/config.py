@@ -26,7 +26,7 @@ KEYS = [
     ("Media", "PIXABAY_API_KEY", "Pixabay API key", "https://pixabay.com/api/docs/", "Free stock videos/photos"),
     ("Voice", "ELEVENLABS_API_KEY", "ElevenLabs API key (optional)", "https://elevenlabs.io/app/settings/api-keys", "Premium voice (Edge TTS is free default)"),
     ("Voice", "ELEVENLABS_VOICE_ID", "ElevenLabs voice ID (optional)", "https://elevenlabs.io/app/voice-library", "Premium voice"),
-    ("AI Video", "FAL_KEY", "fal.ai key (optional)", "https://fal.ai/dashboard/keys", "AI video (Kling/Luma/Minimax via fal)"),
+    ("AI Video", "FAL_KEY", "fal.ai key (optional)", "https://fal.ai/dashboard/keys", "AI video (Kling/Luma/Minimax via fal) + Aura reel lip-sync"),
     ("AI Video", "KLING_ACCESS_KEY", "Kling access key (optional)", "https://app.klingai.com/global/dev/api-key", "AI video"),
     ("AI Video", "KLING_SECRET_KEY", "Kling secret key (optional)", "https://app.klingai.com/global/dev/api-key", "AI video"),
     ("AI Video", "RUNWAY_API_KEY", "Runway API key (optional)", "https://dev.runwayml.com/", "AI video"),
@@ -55,6 +55,8 @@ DEFAULT_SETTINGS = {
     "end_card": "- N I S H U",
     "fc_update_metadata": False,     # Full Control: also improve old videos' title/description/tags (API)
     "fc_videos_per_session": 2,      # Full Control: videos to make from the topic list
+    "aura_voice": "hi-IN-MadhurNeural",  # AI Animal Aura reel: deep male Hindi voice
+    "aura_lipsync": True,            # AI Animal Aura reel: lip-sync talking shots when FAL_KEY is set
 }
 
 def _read() -> dict:

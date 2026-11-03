@@ -86,27 +86,71 @@ async function doScan() {
 $("#doScan").onclick = doScan;
 
 // ---------- create ----------
-const STEPS = [["topic","Topic"],["script","Script + title"],["media","Clips / AI visuals"],["voice","Voiceover"],["edit","Edit + captions"],["post","Post"]];
+const STEPSETS = {
+  normal: [["topic","Topic"],["script","Script + title"],["media","Clips / AI visuals"],["voice","Voiceover"],["edit","Edit + captions"],["post","Post"]],
+  animal_aura: [["plan","Shot plan"],["voice","Hindi voice"],["character","Character image"],["shots","Shot stills"],["ai_video","Image → video"],["lipsync","Lip-sync"],["edit","Edit + captions"]],
+};
+let TPL = "normal", STEPS = STEPSETS.normal;
 function paintSteps(events, done) {
-  const seen = new Set(events.map(e => e.step === "ai_video" ? "media" : e.step));
+  const seen = new Set(events.map(e => TPL === "normal" && e.step === "ai_video" ? "media" : e.step));
   let cur = STEPS.findIndex(([k]) => !seen.has(k));
   $("#steps").innerHTML = STEPS.map(([k,l],i) => `<li class="${seen.has(k) || (done && i < STEPS.length) ? "done" : i === cur ? "now" : ""}">${l}</li>`).join("");
   $("#runlog").innerHTML = events.map(e => `<div><span>${e.t}</span>${esc(e.msg)}</div>`).join("");
   $("#runlog").scrollTop = 1e9;
 }
-async function create() {
-  const j = await api("/api/create", { method: "POST", body: { topic: $("#topic").value || null } });
-  toast("Video ban rahi hai…"); paintSteps([], false);
+async function startJob(body, msg) {
+  let j; try { j = await api("/api/create", { method: "POST", body }); } catch (e) { toast(e.message); return; }
+  toast(msg); paintSteps([], false); $("#steps").scrollIntoView({ behavior: "smooth", block: "center" });
   const poll = setInterval(async () => {
     const s = await api("/api/jobs/" + j.id); paintSteps(s.events, s.status === "done");
     if (s.status !== "running") { clearInterval(poll); if (s.result?.ok) showResult(s.result); else toast("Error: " + (s.result?.error || "")); }
   }, 1500);
 }
+const create = () => startJob({ topic: $("#topic").value || null }, "Video ban rahi hai…");
 function showResult(r) {
-  $("#player").src = DEMO ? "demo-reel.mp4" : `/media/runs/${r.run}/final.mp4`; $("#phEmpty").hidden = true;
   $("#captionBox").innerHTML = `<div class="cap">${esc(r.caption)}</div>`;
+  if (DEMO && r.template === "animal_aura") { $("#player").removeAttribute("src"); $("#phEmpty").hidden = false;
+    $("#phEmpty").innerHTML = "🦁 Demo mode<br><small>Asli reel aapki keys (Gemini + Veo/Kling/fal) se PC pe banegi</small>"; return; }
+  $("#player").src = DEMO ? "demo-reel.mp4" : `/media/runs/${r.run}/final.mp4`; $("#phEmpty").hidden = true;
 }
 $("#go").onclick = create;
+
+// AI Animal Aura Reel — a template inside Create Video (no separate menu)
+function setTemplate(t) {
+  TPL = t; STEPS = STEPSETS[t] || STEPSETS.normal;
+  $$("#tplSeg button").forEach(b => b.classList.toggle("on", b.dataset.tpl === t));
+  $("#tplNormal").hidden = t !== "normal"; $("#tplAura").hidden = t !== "animal_aura";
+  $("#createSub").textContent = t === "normal" ? "Topic do (ya khali chhodo, AI khud trending topic chunega)."
+    : "Suit, sunglasses, gold chain wala AI animal + luxury scenes + Hindi attitude dialogue + lip-sync, ~20-25 sec.";
+  paintSteps([], false); if (t === "animal_aura") loadAura();
+}
+$$("#tplSeg button").forEach(b => b.onclick = () => setTemplate(b.dataset.tpl));
+let AURA = null, auLocs = ["supercar", "jet", "mansion"];
+async function loadAura() {
+  if (AURA) return; AURA = await api("/api/aura/options");
+  const opts = (sel, list, v) => { $(sel).innerHTML = list.map(o => `<option value="${o.id}"${o.id === v ? " selected" : ""}>${esc(o.label)}</option>`).join(""); };
+  opts("#auAnimal", AURA.animals, "black_lion"); opts("#auOutfit", AURA.outfits, "black_suit");
+  opts("#auMode", AURA.dialogue_modes, "preset"); opts("#auPreset", AURA.presets, "rival_rich");
+  paintLocs(); $("#auMode").onchange = () => { const m = $("#auMode").value; $("#auMineWrap").hidden = m !== "mine"; $("#auPresetWrap").hidden = m !== "preset"; };
+  planAura();
+}
+function paintLocs() {
+  $("#auLocs").innerHTML = AURA.locations.map(l => { const i = auLocs.indexOf(l.id);
+    return `<span class="chip${i >= 0 ? " on" : ""}" data-loc="${l.id}">${i >= 0 ? `<b>${i + 1}</b>` : ""}${esc(l.label)}</span>`; }).join("");
+}
+$("#auLocs").onclick = e => { const c = e.target.closest("[data-loc]"); if (!c) return; const id = c.dataset.loc, i = auLocs.indexOf(id);
+  if (i >= 0) { if (auLocs.length > 1) auLocs.splice(i, 1); } else auLocs.push(id); paintLocs(); };
+const auraOpts = () => ({ animal: $("#auAnimal").value, outfit: $("#auOutfit").value, name: $("#auName").value.trim() || undefined,
+  hearts: +$("#auHearts").value, locations: auLocs, dialogue_mode: $("#auMode").value, preset: $("#auPreset").value, dialogue: $("#auLines").value });
+async function planAura() {
+  let p; try { p = await api("/api/aura/plan", { method: "POST", body: auraOpts() }); } catch (e) { $("#auPlan").innerHTML = `<div class="plan-sum plan-warn">⚠ ${esc(e.message)}</div>`; return; }
+  $("#auPlan").innerHTML = `<div class="plan-sum"><b>${esc(p.character.name)}</b> · ${p.shots.length} shots · ~${Math.round(p.total_seconds)}s · ${p.bpm} BPM cuts · CTA: <b>${esc(p.cta)}</b>${p.warning ? ` <span class="plan-warn">⚠ ${esc(p.warning)}</span>` : ""}</div>` +
+    p.shots.map(s => `<div class="shot"><div class="sh-h"><span>Shot ${s.n} · ${s.duration.toFixed(1)}s</span><span>${s.effect === "slowmo" ? "slow-mo" : s.effect}${s.lipsync ? " · lip-sync" : ""}</span></div>
+      <div class="sh-l">📍 ${esc(s.location_label)}</div><q>“${esc(s.line.roman)}”</q><small>🎬 ${esc(s.action)} · ${esc(s.camera)}</small></div>`).join("");
+}
+$("#auPlanBtn").onclick = planAura;
+["#auAnimal", "#auOutfit", "#auHearts", "#auPreset"].forEach(s => $(s).addEventListener("change", planAura));
+$("#auGo").onclick = () => startJob({ template: "animal_aura", aura: auraOpts() }, "Aura reel ban rahi hai… 🦁");
 paintSteps([], false);
 
 // ---------- full control ----------
@@ -177,6 +221,7 @@ $("#chatForm").onsubmit = async e => {
     const r = await api("/api/chat", { method: "POST", body: { message: q } });
     say("ai", r.reply); (r.done || []).forEach(a => say("act", "✓ " + a));
     if (r.goto) location.hash = "#" + r.goto;
+    if (r.template) setTemplate(r.template);
     if (r.job) { $("#topic").value = r.topic || ""; location.hash = "#create"; }
   } catch (err) { say("ai", "Error: " + err.message); }
 };
@@ -216,3 +261,4 @@ if (DEMO && new URLSearchParams(location.search).has('fcauto')) setTimeout(() =>
 if (DEMO && new URLSearchParams(location.search).has('chatopen')) openChat();
 if (DEMO && new URLSearchParams(location.search).has('chatdemo')) { say('me','Instagram pe abhi post mat karo'); say('ai','Theek hai 👍 pehle permission card dekh lo.'); }
 if (DEMO && new URLSearchParams(location.search).has('autocreate')) setTimeout(create, 200);
+if (new URLSearchParams(location.search).has("aura")) { location.hash = "#create"; setTemplate("animal_aura"); }
